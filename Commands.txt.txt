@@ -1,0 +1,192 @@
+====================================================
+            RIFE VIDEO INTERPOLATION GUIDE
+====================================================
+
+This document explains how to use the RIFE (Real-Time
+Intermediate Flow Estimation) model to increase the 
+framerate of your videos by generating smooth 
+intermediate frames using AI.
+
+--------------------------------------------
+1. REQUIREMENTS
+--------------------------------------------
+
+Before running any command, make sure you have:
+
+1. A GPU (NVIDIA recommended for best performance)
+2. Python 3.8 – 3.10 installed
+3. PyTorch installed (with CUDA if available)
+4. FFmpeg installed and added to PATH
+5. RIFE model and scripts located inside the folder:
+       ./RIFE/ or ./ECCV2022-RIFE/
+6. An input video placed in:
+       ./input/input.mp4
+
+--------------------------------------------
+2. BASIC INTERPOLATION COMMAND
+--------------------------------------------
+
+Run the following from inside the RIFE project folder:
+
+    python inference_video.py --exp=1 --input=input.mp4
+
+This will:
+    → read the video
+    → interpolate between every frame once
+    → produce a 2× higher framerate video
+
+Output will appear in:
+
+    ./output/
+
+--------------------------------------------
+3. EXPANDED USAGE (FPS MULTIPLIERS)
+--------------------------------------------
+
+RIFE uses the `--exp` flag for exponential interpolation:
+
+exp=1  → 2× frames  
+exp=2  → 4× frames  
+exp=3  → 8× frames  
+exp=4  → 16× frames  
+
+Examples:
+
+--------------------------------------------
+Example A: 30 FPS → 60 FPS
+--------------------------------------------
+    python inference_video.py --exp=1 --input=input.mp4
+
+--------------------------------------------
+Example B: 30 FPS → 120 FPS
+--------------------------------------------
+    python inference_video.py --exp=2 --input=input.mp4
+
+--------------------------------------------
+Example C: 24 FPS → 96 FPS
+--------------------------------------------
+    python inference_video.py --exp=2 --input=input.mp4
+
+--------------------------------------------
+4. SETTING EXACT OUTPUT FPS
+--------------------------------------------
+
+Instead of using exp, you can target a specific FPS:
+
+    python inference_video.py --fps=60 --input=input.mp4
+
+RIFE automatically calculates how many intermediate
+frames are needed to reach the chosen framerate.
+
+Examples:
+--------------------------------------------
+Input: 24 FPS → Target: 72 FPS
+--------------------------------------------
+    python inference_video.py --fps=72 --input=input.mp4
+
+--------------------------------------------
+Input: 25 FPS → Target: 50 FPS
+--------------------------------------------
+    python inference_video.py --fps=50 --input=input.mp4
+
+--------------------------------------------
+5. OPTIONAL FLAGS (ADVANCED USERS)
+--------------------------------------------
+
+--fps=<value>
+    Sets final FPS directly.
+
+--exp=<value>
+    Interpolation expansion exponent.
+
+--input=<file>
+    Set custom input file.
+
+--output=<folder>
+    Set custom output folder.
+
+--uhd
+    Enables UHD mode for high-resolution input videos.
+
+--skip
+    Skips duplicate-frame detection.
+
+--------------------------------------------
+6. WHAT EACH COMPONENT DOES
+--------------------------------------------
+
+• **inference_video.py**
+    The main runner that:
+    - loads your video frame-by-frame
+    - feeds frames into the AI model
+    - generates interpolated frames
+    - writes them into a new video
+
+• **RIFE Model (model.pth / model.pkl / .onnx)**
+    The actual deep-learning model that predicts the 
+    missing frames between two images.
+
+• **FFmpeg**
+    Handles:
+    - video decoding
+    - encoding final output
+    - scaling/fps formatting
+
+• **GPU (CUDA)**
+    Handles the expensive AI computations.
+    A stronger GPU gives significantly faster performance.
+
+--------------------------------------------
+7. COMMON WORKFLOWS
+--------------------------------------------
+
+--------------------------------------------
+Workflow 1: Smooth Motion (Normal Use)
+--------------------------------------------
+    python inference_video.py --exp=1 --input=input.mp4
+
+--------------------------------------------
+Workflow 2: Ultra Smooth (Cinematic)
+--------------------------------------------
+    python inference_video.py --exp=2 --input=input.mp4
+
+--------------------------------------------
+Workflow 3: Convert ANY FPS → EXACT 60 FPS
+--------------------------------------------
+    python inference_video.py --fps=60 --input=input.mp4
+
+--------------------------------------------
+8. PERFORMANCE NOTES
+--------------------------------------------
+
+• Higher resolution → slower interpolation.
+• exp=2 and above increases processing time significantly.
+• Downscaling → interpolating → upscaling is a valid
+  optimization trick for speed-sensitive tasks.
+• If running out of memory:
+    → Use --uhd
+    → Or reduce resolution of input video.
+
+--------------------------------------------
+9. TROUBLESHOOTING
+--------------------------------------------
+
+If you get:
+"RuntimeError: Could not read frame"
+→ Re-encode video:
+    ffmpeg -i input.mp4 -pix_fmt yuv420p fixed.mp4
+
+If you get:
+"CUDA out of memory"
+→ Use lower resolution input, or add:
+    --uhd
+
+If output video is glitchy:
+→ Lower the exp value (use exp=1 or exp=2)
+
+If script crashes early:
+→ Ensure model file exists in the correct directory.
+
+====================================================
+       END OF DOCUMENT — HAPPY INTERPOLATING!
+====================================================
